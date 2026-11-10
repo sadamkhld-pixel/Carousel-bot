@@ -1,0 +1,39 @@
+name: Carousell Bot Auto
+
+on:
+  schedule:
+    # Berjalan setiap 6 jam sekali
+    - cron: '0 */6 * * *' 
+  workflow_dispatch: # Tombol untuk menjalankan manual
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # Batas maksimal GitHub Actions: 6 Jam
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Scraper
+        # PERHATIKAN: Nama file di bawah ini adalah Carousel.py (pakai 'o')
+        run: python Carousel.py
+
+      # Simpan database ke GitHub
+      - name: Commit and Push Database Update
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add riwayat_iklan.db
+          git commit -m "Update riwayat iklan [skip ci]" || echo "Tidak ada iklan baru"
+          git push
